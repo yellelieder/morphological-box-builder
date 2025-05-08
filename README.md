@@ -69,7 +69,7 @@ npm run dev
 ## 🌍 Live Demo
 
 Try the Morphological Box Builder now:  
-👉 [https://morphological-box.vercel.app/](https://morphological-box.vercel.app/)
+👉 [https://morphbox.yel.li](https://morphbox.yel.li)
 
 ## 🛠️ Development Notes
 
