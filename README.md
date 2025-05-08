@@ -30,9 +30,3 @@ You're designing a complex B2B software licensing model. Using the Morphological
 - Add all possible options per variant.
 - Build and compare different licensing scenarios.
 - Export findings for stakeholders or implementation.
-
-### 🖼️ Screenshot
-
-Here’s what the app looks like with three configured scenarios (Default, Average, Edge):
-
-![Screenshot with scenarios](screenshot.png)
