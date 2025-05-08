@@ -1,30 +1,38 @@
-# Business scenario table
+# 🧠 Morphological Box Builder
 
-*Automatically synced with your [v0.dev](https://v0.dev) deployments*
+A flexible, interactive tool for scenario generation using morphological analysis. This application helps users explore complex problem spaces by breaking them down into variants and options, enabling structured creativity and systematic exploration.
 
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/yellelieders-projects/v0-business-scenario-table)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.dev-black?style=for-the-badge)](https://v0.dev/chat/projects/5NupAbyS4oV)
+## 🚀 Features
 
-## Overview
+- **Variants & Options Management**  
+  Create and manage multiple variants and their corresponding options to build a morphological field.
 
-This repository will stay in sync with your deployed chats on [v0.dev](https://v0.dev).
-Any changes you make to your deployed app will be automatically pushed to this repository from [v0.dev](https://v0.dev).
+- **Scenario Generation**  
+  Combine options into scenarios to simulate real-world cases — like default, edge, or average scenarios.
 
-## Deployment
+- **Visualization**  
+  Visual interface to navigate and edit variant-option relationships and scenario configurations.
 
-Your project is live at:
+- **Data Persistence**  
+  Auto-saves data in local storage, with support for import/export in JSON format.
 
-**[https://vercel.com/yellelieders-projects/v0-business-scenario-table](https://vercel.com/yellelieders-projects/v0-business-scenario-table)**
+- **Export Capabilities**  
+  Download your morphological analysis as a PDF for documentation or presentation.
 
-## Build your app
+- **Undo & Redo**  
+  Easy mistake recovery with undo functionality.
 
-Continue building your app on:
+## 📊 Example Use Case
 
-**[https://v0.dev/chat/projects/5NupAbyS4oV](https://v0.dev/chat/projects/5NupAbyS4oV)**
+You're designing a complex B2B software licensing model. Using the Morphological Box Builder, you can:
 
-## How It Works
+- Define variants like "License Type", "Billing Type", "Fulfillment Method", etc.
+- Add all possible options per variant.
+- Build and compare different licensing scenarios.
+- Export findings for stakeholders or implementation.
 
-1. Create and modify your project using [v0.dev](https://v0.dev)
-2. Deploy your chats from the v0 interface
-3. Changes are automatically pushed to this repository
-4. Vercel deploys the latest version from this repository
+### 🖼️ Screenshot
+
+Here’s what the app looks like with three configured scenarios (Default, Average, Edge):
+
+![Screenshot with scenarios](screenshot.png)
