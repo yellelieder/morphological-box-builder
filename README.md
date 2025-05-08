@@ -81,7 +81,11 @@ Try the Morphological Box Builder now:
 
 ## 📄 License
 
-This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
+This project is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
+
+You may copy, distribute, and modify the software as long as you disclose your source code and include the same license. This license is especially suited for SaaS and web-based applications, ensuring that improvements and derivatives remain open when deployed over a network.
+
+For more details, see the full license text: [GNU AGPL v3.0](https://www.gnu.org/licenses/agpl-3.0.html)
 
 ## ✨ Credits
 
