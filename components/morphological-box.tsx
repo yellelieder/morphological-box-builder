@@ -34,6 +34,7 @@ export function MorphologicalBox({
   const [containerHeight, setContainerHeight] = useState(0)
   const [labelWidth, setLabelWidth] = useState(120)
   const [isMobile, setIsMobile] = useState(false)
+  const [hoveredScenario, setHoveredScenario] = useState<string | null>(null)
 
   // Check if mobile view
   useEffect(() => {
@@ -163,7 +164,12 @@ export function MorphologicalBox({
       {/* Labels above the table */}
       <div className="flex flex-wrap justify-center gap-2 mb-4">
         {scenarios.map((scenario, index) => (
-          <div key={scenario.id} className="flex items-center">
+          <div
+            key={scenario.id}
+            className="flex items-center"
+            onMouseEnter={() => setHoveredScenario(scenario.id)}
+            onMouseLeave={() => setHoveredScenario(null)}
+          >
             <div
               className="px-3 py-1 rounded text-white text-center text-sm cursor-pointer truncate"
               style={{
@@ -197,20 +203,10 @@ export function MorphologicalBox({
 
       <div ref={containerRef} className="relative overflow-x-auto border border-gray-200 rounded-lg">
         <table ref={tableRef} className="w-full text-sm text-left">
-          <thead className="text-xs text-gray-700 uppercase bg-gray-100">
-            <tr>
-              <th
-                colSpan={tableData.length > 0 && tableData[0].options.length > 0 ? tableData[0].options.length + 1 : 2}
-                className="px-4 py-3 border-b border-gray-200 text-center font-bold"
-              >
-                Variants Characteristics
-              </th>
-            </tr>
-          </thead>
           <tbody>
             {tableData.map((row, rowIndex) => (
               <tr key={rowIndex} className="bg-white border-b">
-                <td className="px-4 py-3 font-medium border-r border-gray-200 relative group">
+                <td className="px-4 py-3 font-medium border-r border-gray-200 relative group bg-gray-50">
                   {row.name}
                   <button
                     className="absolute right-2 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity"
@@ -239,12 +235,13 @@ export function MorphologicalBox({
             const scenario = scenarios[scenarioIndex]
             const strokeColor = scenario.color || getScenarioColor(scenarioIndex)
             const fillColor = strokeColor
+            const opacity = hoveredScenario === null || hoveredScenario === scenario.id ? 1 : 0.3
 
             return (
               <g
                 key={scenario.id}
                 onClick={() => onEditScenario(scenario)}
-                style={{ cursor: "pointer", pointerEvents: "auto" }}
+                style={{ cursor: "pointer", pointerEvents: "auto", opacity, transition: "opacity 0.3s ease" }}
               >
                 {/* Draw lines connecting all points */}
                 {points.length > 1 && (

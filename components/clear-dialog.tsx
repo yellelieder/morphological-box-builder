@@ -12,23 +12,30 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { AlertTriangle } from "lucide-react"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 interface ClearDialogProps {
   isOpen: boolean
   onClose: () => void
-  onConfirm: () => void
+  onClearScenarios: () => void
+  onClearAll: () => void
 }
 
-export function ClearDialog({ isOpen, onClose, onConfirm }: ClearDialogProps) {
+export function ClearDialog({ isOpen, onClose, onClearScenarios, onClearAll }: ClearDialogProps) {
   const [confirmText, setConfirmText] = useState("")
   const [step, setStep] = useState(1)
+  const [clearType, setClearType] = useState<"scenarios" | "all">("scenarios")
 
   const handleFirstConfirm = () => {
     setStep(2)
   }
 
   const handleFinalConfirm = () => {
-    onConfirm()
+    if (clearType === "scenarios") {
+      onClearScenarios()
+    } else {
+      onClearAll()
+    }
     setStep(1)
     setConfirmText("")
     onClose()
@@ -46,15 +53,28 @@ export function ClearDialog({ isOpen, onClose, onConfirm }: ClearDialogProps) {
         <DialogHeader>
           <DialogTitle className="flex items-center text-red-600">
             <AlertTriangle className="h-5 w-5 mr-2" />
-            {step === 1 ? "Clear All Data?" : "Final Confirmation"}
+            {step === 1 ? "Clear Data" : "Final Confirmation"}
           </DialogTitle>
         </DialogHeader>
 
         {step === 1 ? (
           <>
-            <DialogDescription>
-              This will delete all variants, options, and scenarios. This action cannot be undone.
-            </DialogDescription>
+            <Tabs defaultValue="scenarios" onValueChange={(value) => setClearType(value as "scenarios" | "all")}>
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="scenarios">Clear Scenarios</TabsTrigger>
+                <TabsTrigger value="all">Clear Everything</TabsTrigger>
+              </TabsList>
+              <TabsContent value="scenarios">
+                <p className="text-sm text-gray-600 mt-2">
+                  This will delete all scenarios but keep your variants and options intact.
+                </p>
+              </TabsContent>
+              <TabsContent value="all">
+                <p className="text-sm text-gray-600 mt-2">
+                  This will delete all variants, options, and scenarios. Your box will be reset to default.
+                </p>
+              </TabsContent>
+            </Tabs>
 
             <DialogFooter className="mt-4">
               <Button variant="outline" onClick={handleClose} className="mr-2">
@@ -83,7 +103,7 @@ export function ClearDialog({ isOpen, onClose, onConfirm }: ClearDialogProps) {
                 Cancel
               </Button>
               <Button variant="destructive" onClick={handleFinalConfirm} disabled={confirmText !== "DELETE"}>
-                Delete Everything
+                {clearType === "scenarios" ? "Delete All Scenarios" : "Delete Everything"}
               </Button>
             </DialogFooter>
           </>

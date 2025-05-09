@@ -2,17 +2,18 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { FileUp, FileDown } from "lucide-react"
+import { FileUp } from "lucide-react"
 import type { TableData } from "@/types/table-data"
 import type { Scenario } from "@/types/scenario"
 
 interface ImportExportProps {
   tableData: TableData
   scenarios: Scenario[]
-  onImport: (data: { tableData: TableData; scenarios: Scenario[] }) => void
+  title: string
+  onImport: (data: { tableData: TableData; scenarios: Scenario[]; title?: string }) => void
 }
 
-export function ImportExport({ tableData, scenarios, onImport }: ImportExportProps) {
+export function ImportExport({ tableData, scenarios, title, onImport }: ImportExportProps) {
   const [isImportModalOpen, setIsImportModalOpen] = useState(false)
   const [importData, setImportData] = useState("")
   const [importError, setImportError] = useState("")
@@ -21,6 +22,7 @@ export function ImportExport({ tableData, scenarios, onImport }: ImportExportPro
     const data = {
       tableData,
       scenarios,
+      title,
     }
 
     const jsonString = JSON.stringify(data, null, 2)
@@ -29,7 +31,8 @@ export function ImportExport({ tableData, scenarios, onImport }: ImportExportPro
 
     const a = document.createElement("a")
     a.href = url
-    a.download = "morphological-box-data.json"
+    const safeTitle = title.replace(/[^a-z0-9]/gi, "_").toLowerCase()
+    a.download = `${safeTitle}.json`
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
@@ -72,16 +75,10 @@ export function ImportExport({ tableData, scenarios, onImport }: ImportExportPro
 
   return (
     <>
-      <div className="flex gap-2">
-        <Button onClick={handleExport} variant="outline">
-          <FileDown className="mr-2 h-4 w-4" />
-          Export Data
-        </Button>
-        <Button onClick={() => setIsImportModalOpen(true)} variant="outline">
-          <FileUp className="mr-2 h-4 w-4" />
-          Import Data
-        </Button>
-      </div>
+      <Button onClick={() => setIsImportModalOpen(true)} variant="outline">
+        <FileUp className="mr-2 h-4 w-4" />
+        Import
+      </Button>
 
       <Dialog open={isImportModalOpen} onOpenChange={setIsImportModalOpen}>
         <DialogContent className="sm:max-w-[600px]">

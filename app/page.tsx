@@ -5,36 +5,74 @@ import { MorphologicalBox } from "@/components/morphological-box"
 import { ScenarioModal } from "@/components/scenario-modal"
 import { VariantModal } from "@/components/variant-modal"
 import { ClearDialog } from "@/components/clear-dialog"
+import { ShareDialog } from "@/components/share-dialog"
 import { Statistics } from "@/components/statistics"
-import { ExportPDF } from "@/components/export-pdf"
-import { ImportExport } from "@/components/import-export"
+import { ExportMenu } from "@/components/export-menu"
+import { MoreMenu } from "@/components/more-menu"
+import { TitleInput } from "@/components/title-input"
 import { HelpModal } from "@/components/help-modal"
 import { Footer } from "@/components/footer"
 import { Button } from "@/components/ui/button"
-import { Plus, HelpCircle, Save, RotateCcw, Trash2 } from "lucide-react"
+import { Plus, RotateCcw } from "lucide-react"
 import type { Scenario } from "@/types/scenario"
 import type { TableData, TableRow } from "@/types/table-data"
 import { initialTableData } from "@/data/table-data"
 import { useToast } from "@/components/ui/use-toast"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 
 export default function Home() {
   const { toast } = useToast()
   const [tableData, setTableData] = useState<TableData>(initialTableData)
   const [scenarios, setScenarios] = useState<Scenario[]>([])
+  const [title, setTitle] = useState("Morphological Box")
   const [isScenarioModalOpen, setIsScenarioModalOpen] = useState(false)
   const [isVariantModalOpen, setIsVariantModalOpen] = useState(false)
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false)
   const [isClearDialogOpen, setIsClearDialogOpen] = useState(false)
+  const [isShareDialogOpen, setIsShareDialogOpen] = useState(false)
   const [currentScenario, setCurrentScenario] = useState<Scenario | null>(null)
   const [currentVariant, setCurrentVariant] = useState<TableRow | null>(null)
-  const [history, setHistory] = useState<{ tableData: TableData; scenarios: Scenario[] }[]>([])
+  const [history, setHistory] = useState<{ tableData: TableData; scenarios: Scenario[]; title: string }[]>([])
   const [historyIndex, setHistoryIndex] = useState(-1)
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false)
+  const [importData, setImportData] = useState("")
+  const [importError, setImportError] = useState("")
 
-  // Load data from localStorage on initial load
+  // Load data from localStorage or URL on initial load
   useEffect(() => {
     try {
+      // Check if there's data in the URL
+      if (typeof window !== "undefined") {
+        const urlParams = new URLSearchParams(window.location.search)
+        const sharedData = urlParams.get("data")
+
+        if (sharedData) {
+          try {
+            const decodedData = JSON.parse(atob(decodeURIComponent(sharedData)))
+            if (decodedData.tableData && decodedData.scenarios) {
+              setTableData(decodedData.tableData)
+              setScenarios(decodedData.scenarios)
+              if (decodedData.title) {
+                setTitle(decodedData.title)
+                // Update document title
+                document.title = `${decodedData.title} | morphbox`
+              }
+              toast({
+                title: "Shared data loaded",
+                description: "The shared morphological box has been loaded successfully.",
+              })
+              return
+            }
+          } catch (error) {
+            console.error("Error parsing shared data:", error)
+          }
+        }
+      }
+
+      // If no URL data, try localStorage
       const savedTableData = localStorage.getItem("morphBoxTableData")
       const savedScenarios = localStorage.getItem("morphBoxScenarios")
+      const savedTitle = localStorage.getItem("morphBoxTitle")
 
       if (savedTableData) {
         setTableData(JSON.parse(savedTableData))
@@ -43,10 +81,23 @@ export default function Home() {
       if (savedScenarios) {
         setScenarios(JSON.parse(savedScenarios))
       }
+
+      if (savedTitle) {
+        setTitle(savedTitle)
+        // Update document title
+        document.title = `${savedTitle} | morphbox`
+      }
     } catch (error) {
-      console.error("Error loading data from localStorage:", error)
+      console.error("Error loading data:", error)
     }
   }, [])
+
+  // Update document title when title changes
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      document.title = `${title} | morphbox`
+    }
+  }, [title])
 
   // Save to history when data changes
   useEffect(() => {
@@ -54,14 +105,15 @@ export default function Home() {
       // Save to localStorage
       localStorage.setItem("morphBoxTableData", JSON.stringify(tableData))
       localStorage.setItem("morphBoxScenarios", JSON.stringify(scenarios))
+      localStorage.setItem("morphBoxTitle", title)
 
       // Add to history if it's a new state
       if (historyIndex === history.length - 1 || historyIndex === -1) {
-        setHistory([...history.slice(0, historyIndex + 1), { tableData, scenarios }])
+        setHistory([...history.slice(0, historyIndex + 1), { tableData, scenarios, title }])
         setHistoryIndex(historyIndex + 1)
       }
     }
-  }, [tableData, scenarios])
+  }, [tableData, scenarios, title])
 
   const handleAddScenario = () => {
     setCurrentScenario(null)
@@ -181,9 +233,12 @@ export default function Home() {
     setIsVariantModalOpen(false)
   }
 
-  const handleImportData = (data: { tableData: TableData; scenarios: Scenario[] }) => {
+  const handleImportData = (data: { tableData: TableData; scenarios: Scenario[]; title?: string }) => {
     setTableData(data.tableData)
     setScenarios(data.scenarios)
+    if (data.title) {
+      setTitle(data.title)
+    }
     toast({
       title: "Data imported",
       description: `Imported ${data.tableData.length} variants and ${data.scenarios.length} scenarios.`,
@@ -196,6 +251,7 @@ export default function Home() {
       const previousState = history[newIndex]
       setTableData(previousState.tableData)
       setScenarios(previousState.scenarios)
+      setTitle(previousState.title)
       setHistoryIndex(newIndex)
     }
   }
@@ -203,117 +259,215 @@ export default function Home() {
   const handleSaveToLocalStorage = () => {
     localStorage.setItem("morphBoxTableData", JSON.stringify(tableData))
     localStorage.setItem("morphBoxScenarios", JSON.stringify(scenarios))
+    localStorage.setItem("morphBoxTitle", title)
     toast({
       title: "Data saved",
       description: "Your morphological box has been saved to local storage.",
     })
   }
 
-  const handleClearAll = () => {
-    setIsClearDialogOpen(true)
+  const handleClearScenarios = () => {
+    setScenarios([])
+    localStorage.removeItem("morphBoxScenarios")
+    toast({
+      title: "Scenarios cleared",
+      description: "All scenarios have been deleted.",
+    })
   }
 
-  const handleConfirmClear = () => {
-    setTableData(initialTableData)
+  const handleClearAll = () => {
+    setTableData([])
     setScenarios([])
     localStorage.removeItem("morphBoxTableData")
     localStorage.removeItem("morphBoxScenarios")
     toast({
       title: "All data cleared",
-      description: "Your morphological box has been reset to default.",
+      description: "Your morphological box has been completely cleared.",
     })
   }
 
+  const handleExportData = () => {
+    const data = {
+      tableData,
+      scenarios,
+      title,
+    }
+
+    const jsonString = JSON.stringify(data, null, 2)
+    const blob = new Blob([jsonString], { type: "application/json" })
+    const url = URL.createObjectURL(blob)
+
+    const a = document.createElement("a")
+    a.href = url
+    const safeTitle = title.replace(/[^a-z0-9]/gi, "_").toLowerCase()
+    a.download = `${safeTitle}.json`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
+
+  const handleImport = () => {
+    try {
+      setImportError("")
+      const data = JSON.parse(importData)
+
+      // Validate data structure
+      if (!data.tableData || !Array.isArray(data.tableData) || !data.scenarios || !Array.isArray(data.scenarios)) {
+        setImportError("Invalid data format. The file must contain tableData and scenarios arrays.")
+        return
+      }
+
+      // Validate tableData structure
+      for (const row of data.tableData) {
+        if (!row.name || !row.options || !Array.isArray(row.options)) {
+          setImportError("Invalid variant format. Each variant must have a name and options array.")
+          return
+        }
+      }
+
+      // Validate scenarios structure
+      for (const scenario of data.scenarios) {
+        if (!scenario.id || !scenario.name || !scenario.selections || typeof scenario.selections !== "object") {
+          setImportError("Invalid scenario format. Each scenario must have an id, name, and selections object.")
+          return
+        }
+      }
+
+      handleImportData(data)
+      setIsImportModalOpen(false)
+    } catch (error) {
+      setImportError("Invalid JSON format. Please check your data and try again.")
+    }
+  }
+
   return (
-    <main className="container mx-auto p-4 min-h-screen flex flex-col">
-      <div className="flex flex-wrap items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Morphological Box Builder</h1>
-        <div className="flex items-center space-x-2">
-          <Button variant="outline" size="sm" onClick={() => setIsHelpModalOpen(true)}>
-            <HelpCircle className="h-4 w-4 mr-1" />
-            Help
-          </Button>
+    <>
+      <main className="container mx-auto p-4 min-h-screen flex flex-col">
+        <div className="flex flex-wrap items-center justify-between mb-6">
+          <TitleInput title={title} onTitleChange={setTitle} />
+          <div className="flex items-center space-x-2">
+            <MoreMenu
+              onSave={handleSaveToLocalStorage}
+              onClear={() => setIsClearDialogOpen(true)}
+              onShare={() => setIsShareDialogOpen(true)}
+              onHelp={() => setIsHelpModalOpen(true)}
+              onImport={() => setIsImportModalOpen(true)}
+              onExport={handleExportData}
+            />
+          </div>
         </div>
-      </div>
 
-      <Statistics tableData={tableData} scenarios={scenarios} />
+        <Statistics tableData={tableData} scenarios={scenarios} />
 
-      <div className="flex flex-wrap gap-2 mb-4">
-        <Button onClick={handleAddScenario} className="bg-blue-600 hover:bg-blue-700">
-          <Plus className="h-4 w-4 mr-1" />
-          New Scenario
-        </Button>
+        <div className="flex flex-wrap gap-2 mb-4">
+          <Button onClick={handleAddScenario} className="bg-blue-600 hover:bg-blue-700">
+            <Plus className="h-4 w-4 mr-1" />
+            New Scenario
+          </Button>
 
-        <Button onClick={handleAddVariant} className="bg-purple-600 hover:bg-purple-700">
-          <Plus className="h-4 w-4 mr-1" />
-          Add Variant
-        </Button>
+          <Button onClick={handleAddVariant} className="bg-purple-600 hover:bg-purple-700">
+            <Plus className="h-4 w-4 mr-1" />
+            Add Variant
+          </Button>
 
-        <ExportPDF tableData={tableData} scenarios={scenarios} />
+          <Button onClick={handleUndo} disabled={historyIndex <= 0} variant="outline">
+            <RotateCcw className="h-4 w-4 mr-1" />
+            Undo
+          </Button>
 
-        <ImportExport tableData={tableData} scenarios={scenarios} onImport={handleImportData} />
+          <ExportMenu tableData={tableData} scenarios={scenarios} title={title} />
+        </div>
 
-        <Button onClick={handleUndo} disabled={historyIndex <= 0} variant="outline">
-          <RotateCcw className="h-4 w-4 mr-1" />
-          Undo
-        </Button>
+        <div className="flex-grow">
+          <MorphologicalBox
+            tableData={tableData}
+            scenarios={scenarios}
+            onEditScenario={handleEditScenario}
+            onEditVariant={handleEditVariant}
+            onDuplicateScenario={handleDuplicateScenario}
+          />
+        </div>
 
-        <Button onClick={handleSaveToLocalStorage} variant="outline">
-          <Save className="h-4 w-4 mr-1" />
-          Save
-        </Button>
+        <Footer />
 
-        <Button onClick={handleClearAll} variant="outline" className="text-red-600 hover:bg-red-50">
-          <Trash2 className="h-4 w-4 mr-1" />
-          Clear All
-        </Button>
-      </div>
+        {isScenarioModalOpen && (
+          <ScenarioModal
+            isOpen={isScenarioModalOpen}
+            onClose={() => setIsScenarioModalOpen(false)}
+            onSave={handleSaveScenario}
+            tableData={tableData}
+            scenario={currentScenario}
+            onDelete={handleDeleteScenario}
+          />
+        )}
 
-      <div className="flex-grow">
-        <MorphologicalBox
-          tableData={tableData}
-          scenarios={scenarios}
-          onEditScenario={handleEditScenario}
-          onEditVariant={handleEditVariant}
-          onDuplicateScenario={handleDuplicateScenario}
-        />
-      </div>
+        {isVariantModalOpen && (
+          <VariantModal
+            isOpen={isVariantModalOpen}
+            onClose={() => setIsVariantModalOpen(false)}
+            onSave={handleSaveVariant}
+            onDelete={handleDeleteVariant}
+            variant={currentVariant}
+            existingVariantNames={tableData
+              .map((v) => v.name)
+              .filter((name) => (currentVariant ? name !== currentVariant.name : true))}
+          />
+        )}
 
-      <Footer />
+        {isClearDialogOpen && (
+          <ClearDialog
+            isOpen={isClearDialogOpen}
+            onClose={() => setIsClearDialogOpen(false)}
+            onClearScenarios={handleClearScenarios}
+            onClearAll={handleClearAll}
+          />
+        )}
 
-      {isScenarioModalOpen && (
-        <ScenarioModal
-          isOpen={isScenarioModalOpen}
-          onClose={() => setIsScenarioModalOpen(false)}
-          onSave={handleSaveScenario}
-          tableData={tableData}
-          scenario={currentScenario}
-          onDelete={handleDeleteScenario}
-        />
-      )}
+        {isShareDialogOpen && (
+          <ShareDialog
+            isOpen={isShareDialogOpen}
+            onClose={() => setIsShareDialogOpen(false)}
+            tableData={tableData}
+            scenarios={scenarios}
+            title={title}
+          />
+        )}
 
-      {isVariantModalOpen && (
-        <VariantModal
-          isOpen={isVariantModalOpen}
-          onClose={() => setIsVariantModalOpen(false)}
-          onSave={handleSaveVariant}
-          onDelete={handleDeleteVariant}
-          variant={currentVariant}
-          existingVariantNames={tableData
-            .map((v) => v.name)
-            .filter((name) => (currentVariant ? name !== currentVariant.name : true))}
-        />
-      )}
+        {isHelpModalOpen && <HelpModal isOpen={isHelpModalOpen} onClose={() => setIsHelpModalOpen(false)} />}
 
-      {isClearDialogOpen && (
-        <ClearDialog
-          isOpen={isClearDialogOpen}
-          onClose={() => setIsClearDialogOpen(false)}
-          onConfirm={handleConfirmClear}
-        />
-      )}
+        {isImportModalOpen && (
+          <Dialog open={isImportModalOpen} onOpenChange={setIsImportModalOpen}>
+            <DialogContent className="sm:max-w-[600px]">
+              <DialogHeader>
+                <DialogTitle>Import Data</DialogTitle>
+              </DialogHeader>
 
-      {isHelpModalOpen && <HelpModal isOpen={isHelpModalOpen} onClose={() => setIsHelpModalOpen(false)} />}
-    </main>
+              <div className="py-4">
+                <p className="mb-2 text-sm text-gray-600">
+                  Paste your JSON data below. The data should contain tableData and scenarios arrays.
+                </p>
+                <textarea
+                  className="w-full h-64 p-2 border border-gray-300 rounded-md"
+                  value={importData}
+                  onChange={(e) => setImportData(e.target.value)}
+                  placeholder='{"tableData": [...], "scenarios": [...]}'
+                />
+                {importError && <p className="mt-2 text-sm text-red-500">{importError}</p>}
+              </div>
+
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsImportModalOpen(false)} className="mr-2">
+                  Cancel
+                </Button>
+                <Button onClick={handleImport} className="bg-blue-600 hover:bg-blue-700">
+                  Import
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        )}
+      </main>
+    </>
   )
 }
