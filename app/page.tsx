@@ -12,13 +12,28 @@ import { TitleInput } from "@/components/title-input"
 import { HelpModal } from "@/components/help-modal"
 import { Footer } from "@/components/footer"
 import { Button } from "@/components/ui/button"
-// Importieren Sie das Share2-Icon
 import { Plus, RotateCcw, Trash2, Share2 } from "lucide-react"
 import type { Scenario } from "@/types/scenario"
 import type { TableData, TableRow } from "@/types/table-data"
 import { defaultData } from "@/data/default-data"
 import { useToast } from "@/components/ui/use-toast"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+
+// Hilfsfunktion zur Dekodierung von Base64 zu Unicode
+function base64ToUtf8(str: string): string {
+  try {
+    return decodeURIComponent(
+      Array.prototype.map
+        .call(atob(str), (c) => {
+          return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2)
+        })
+        .join(""),
+    )
+  } catch (e) {
+    console.error("Decoding error:", e)
+    return ""
+  }
+}
 
 export default function Home() {
   const { toast } = useToast()
@@ -51,7 +66,8 @@ export default function Home() {
 
         if (sharedData) {
           try {
-            const decodedData = JSON.parse(atob(decodeURIComponent(sharedData)))
+            // Verwenden Sie die sichere Dekodierungsfunktion
+            const decodedData = JSON.parse(base64ToUtf8(sharedData))
             if (decodedData.tableData && decodedData.scenarios) {
               setTableData(decodedData.tableData)
               setScenarios(decodedData.scenarios)
@@ -378,7 +394,6 @@ export default function Home() {
         <div className="flex flex-wrap items-center justify-between mb-6">
           <TitleInput title={title} onTitleChange={setTitle} />
           <div className="flex items-center space-x-2">
-            {/* Aktualisieren Sie die MoreMenu-Komponente mit den zusätzlichen Props */}
             <MoreMenu
               onSave={handleSaveToLocalStorage}
               onClear={() => setIsClearDialogOpen(true)}

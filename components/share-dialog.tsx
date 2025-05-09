@@ -16,26 +16,62 @@ interface ShareDialogProps {
   title: string
 }
 
+// Hilfsfunktion zur korrekten Kodierung von Unicode-Zeichen in Base64
+function utf8ToBase64(str: string): string {
+  try {
+    // Für moderne Browser
+    return btoa(
+      encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (_, p1) => {
+        return String.fromCharCode(Number.parseInt(p1, 16))
+      }),
+    )
+  } catch (e) {
+    console.error("Encoding error:", e)
+    return ""
+  }
+}
+
+// Hilfsfunktion zur Dekodierung von Base64 zu Unicode
+function base64ToUtf8(str: string): string {
+  try {
+    return decodeURIComponent(
+      Array.prototype.map
+        .call(atob(str), (c) => {
+          return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2)
+        })
+        .join(""),
+    )
+  } catch (e) {
+    console.error("Decoding error:", e)
+    return ""
+  }
+}
+
 export function ShareDialog({ isOpen, onClose, tableData, scenarios, title }: ShareDialogProps) {
   const [shareUrl, setShareUrl] = useState("")
   const [copied, setCopied] = useState(false)
 
   useEffect(() => {
     if (isOpen) {
-      // Create data to share
-      const shareData = {
-        title,
-        tableData,
-        scenarios,
+      try {
+        // Create data to share
+        const shareData = {
+          title,
+          tableData,
+          scenarios,
+        }
+
+        // Encode the data using our safe UTF-8 to Base64 conversion
+        const encodedData = utf8ToBase64(JSON.stringify(shareData))
+
+        // Create the URL with the data as a query parameter
+        const url = `${window.location.origin}${window.location.pathname}?data=${encodedData}`
+
+        setShareUrl(url)
+      } catch (error) {
+        console.error("Error creating share URL:", error)
+        setShareUrl("Error creating share URL. Please try again.")
       }
-
-      // Encode the data
-      const encodedData = encodeURIComponent(btoa(JSON.stringify(shareData)))
-
-      // Create the URL with the data as a query parameter
-      const url = `${window.location.origin}${window.location.pathname}?data=${encodedData}`
-
-      setShareUrl(url)
     }
   }, [isOpen, tableData, scenarios, title])
 
