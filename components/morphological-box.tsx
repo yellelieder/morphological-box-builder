@@ -35,6 +35,7 @@ export function MorphologicalBox({
   const [labelWidth, setLabelWidth] = useState(120)
   const [isMobile, setIsMobile] = useState(false)
   const [hoveredScenario, setHoveredScenario] = useState<string | null>(null)
+  const [isTableReady, setIsTableReady] = useState(false)
 
   // Check if mobile view
   useEffect(() => {
@@ -67,11 +68,13 @@ export function MorphologicalBox({
 
   // Calculate cell positions after render
   useEffect(() => {
-    if (tableRef.current && containerRef.current) {
+    if (!tableData.length || !tableRef.current || !containerRef.current) return
+
+    const calculatePositions = () => {
       const positions: Record<string, CellPosition> = {}
 
-      tableData.forEach((row, rowIndex) => {
-        row.options.forEach((option, optionIndex) => {
+      tableData.forEach((row) => {
+        row.options.forEach((option) => {
           const cellId = `${row.name}-${option}`
           const cell = document.getElementById(cellId)
 
@@ -91,6 +94,7 @@ export function MorphologicalBox({
       })
 
       setCellPositions(positions)
+      setIsTableReady(true)
 
       // Set container height to include space for labels
       setContainerHeight(tableRef.current.offsetHeight + 50)
@@ -101,10 +105,28 @@ export function MorphologicalBox({
         setLabelWidth(Math.min(120, availableWidth / scenarios.length - 10))
       }
     }
+
+    // Initial calculation
+    calculatePositions()
+
+    // Recalculate on window resize
+    window.addEventListener("resize", calculatePositions)
+
+    // Recalculate after a short delay to ensure all elements are properly rendered
+    const timer = setTimeout(calculatePositions, 500)
+
+    return () => {
+      window.removeEventListener("resize", calculatePositions)
+      clearTimeout(timer)
+    }
   }, [tableData, scenarios])
 
   // Adjust point positions when multiple scenarios select the same cell
   const getAdjustedPoints = () => {
+    if (!isTableReady || Object.keys(cellPositions).length === 0) {
+      return scenarios.map(() => [])
+    }
+
     // Track which cells have multiple points
     const cellCounts: Record<string, number> = {}
     const cellScenarioIndices: Record<string, number[]> = {}
@@ -231,44 +253,47 @@ export function MorphologicalBox({
 
         {/* SVG overlay for scenario lines and points */}
         <svg className="absolute top-0 left-0 w-full h-full pointer-events-none">
-          {scenarioPoints.map((points, scenarioIndex) => {
-            const scenario = scenarios[scenarioIndex]
-            const strokeColor = scenario.color || getScenarioColor(scenarioIndex)
-            const fillColor = strokeColor
-            const opacity = hoveredScenario === null || hoveredScenario === scenario.id ? 1 : 0.3
+          {isTableReady &&
+            scenarioPoints.map((points, scenarioIndex) => {
+              if (points.length === 0) return null
 
-            return (
-              <g
-                key={scenario.id}
-                onClick={() => onEditScenario(scenario)}
-                style={{ cursor: "pointer", pointerEvents: "auto", opacity, transition: "opacity 0.3s ease" }}
-              >
-                {/* Draw lines connecting all points */}
-                {points.length > 1 && (
-                  <polyline
-                    points={points.map((p) => `${p.x},${p.y}`).join(" ")}
-                    fill="none"
-                    stroke={strokeColor}
-                    strokeWidth="2"
-                    strokeLinejoin="round"
-                  />
-                )}
+              const scenario = scenarios[scenarioIndex]
+              const strokeColor = scenario.color || getScenarioColor(scenarioIndex)
+              const fillColor = strokeColor
+              const opacity = hoveredScenario === null || hoveredScenario === scenario.id ? 1 : 0.3
 
-                {/* Draw points */}
-                {points.map((point, pointIndex) => (
-                  <circle
-                    key={pointIndex}
-                    cx={point.x}
-                    cy={point.y}
-                    r="6"
-                    fill={fillColor}
-                    stroke="white"
-                    strokeWidth="1"
-                  />
-                ))}
-              </g>
-            )
-          })}
+              return (
+                <g
+                  key={scenario.id}
+                  onClick={() => onEditScenario(scenario)}
+                  style={{ cursor: "pointer", pointerEvents: "auto", opacity, transition: "opacity 0.3s ease" }}
+                >
+                  {/* Draw lines connecting all points */}
+                  {points.length > 1 && (
+                    <polyline
+                      points={points.map((p) => `${p.x},${p.y}`).join(" ")}
+                      fill="none"
+                      stroke={strokeColor}
+                      strokeWidth="2"
+                      strokeLinejoin="round"
+                    />
+                  )}
+
+                  {/* Draw points */}
+                  {points.map((point, pointIndex) => (
+                    <circle
+                      key={pointIndex}
+                      cx={point.x}
+                      cy={point.y}
+                      r="6"
+                      fill={fillColor}
+                      stroke="white"
+                      strokeWidth="1"
+                    />
+                  ))}
+                </g>
+              )
+            })}
         </svg>
       </div>
     </div>

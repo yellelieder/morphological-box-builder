@@ -132,15 +132,15 @@ export function ExportMenu({ tableData, scenarios, title }: ExportMenuProps) {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent>
-        <DropdownMenuItem onClick={() => exportToPDF()}>
+        <DropdownMenuItem id="export-pdf-button" onClick={() => exportToPDF()}>
           <FileDown className="mr-2 h-4 w-4" />
           Export as PDF
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => exportToImage("png")}>
+        <DropdownMenuItem id="export-png-button" onClick={() => exportToImage("png")}>
           <FileImage className="mr-2 h-4 w-4" />
           Export as PNG
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => exportToImage("jpeg")}>
+        <DropdownMenuItem id="export-jpeg-button" onClick={() => exportToImage("jpeg")}>
           <FileImage className="mr-2 h-4 w-4" />
           Export as JPEG
         </DropdownMenuItem>

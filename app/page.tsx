@@ -7,24 +7,24 @@ import { VariantModal } from "@/components/variant-modal"
 import { ClearDialog } from "@/components/clear-dialog"
 import { ShareDialog } from "@/components/share-dialog"
 import { Statistics } from "@/components/statistics"
-import { ExportMenu } from "@/components/export-menu"
 import { MoreMenu } from "@/components/more-menu"
 import { TitleInput } from "@/components/title-input"
 import { HelpModal } from "@/components/help-modal"
 import { Footer } from "@/components/footer"
 import { Button } from "@/components/ui/button"
-import { Plus, RotateCcw } from "lucide-react"
+// Importieren Sie das Share2-Icon
+import { Plus, RotateCcw, Trash2, Share2 } from "lucide-react"
 import type { Scenario } from "@/types/scenario"
 import type { TableData, TableRow } from "@/types/table-data"
-import { initialTableData } from "@/data/table-data"
+import { defaultData } from "@/data/default-data"
 import { useToast } from "@/components/ui/use-toast"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 
 export default function Home() {
   const { toast } = useToast()
-  const [tableData, setTableData] = useState<TableData>(initialTableData)
+  const [tableData, setTableData] = useState<TableData>([])
   const [scenarios, setScenarios] = useState<Scenario[]>([])
-  const [title, setTitle] = useState("Dummy Morphological Box: Fruits & Vegetables")
+  const [title, setTitle] = useState("Morphological Box")
   const [isScenarioModalOpen, setIsScenarioModalOpen] = useState(false)
   const [isVariantModalOpen, setIsVariantModalOpen] = useState(false)
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false)
@@ -37,9 +37,12 @@ export default function Home() {
   const [isImportModalOpen, setIsImportModalOpen] = useState(false)
   const [importData, setImportData] = useState("")
   const [importError, setImportError] = useState("")
+  const [isFirstLoad, setIsFirstLoad] = useState(true)
 
-  // Load data from localStorage or URL on initial load
+  // Load data from localStorage, URL, or default data on initial load
   useEffect(() => {
+    if (!isFirstLoad) return
+
     try {
       // Check if there's data in the URL
       if (typeof window !== "undefined") {
@@ -61,6 +64,7 @@ export default function Home() {
                 title: "Shared data loaded",
                 description: "The shared morphological box has been loaded successfully.",
               })
+              setIsFirstLoad(false)
               return
             }
           } catch (error) {
@@ -74,34 +78,48 @@ export default function Home() {
       const savedScenarios = localStorage.getItem("morphBoxScenarios")
       const savedTitle = localStorage.getItem("morphBoxTitle")
 
-      if (savedTableData) {
+      if (savedTableData && savedScenarios) {
         setTableData(JSON.parse(savedTableData))
-      }
-
-      if (savedScenarios) {
         setScenarios(JSON.parse(savedScenarios))
+
+        if (savedTitle) {
+          setTitle(savedTitle)
+          // Update document title
+          document.title = `${savedTitle} | morphbox`
+        }
+
+        setIsFirstLoad(false)
+        return
       }
 
-      if (savedTitle) {
-        setTitle(savedTitle)
-        // Update document title
-        document.title = `${savedTitle} | morphbox`
-      }
+      // If no localStorage data, use default data
+      setTableData(defaultData.tableData)
+      setScenarios(defaultData.scenarios)
+      setTitle(defaultData.title)
+      document.title = `${defaultData.title} | morphbox`
+
+      // Save default data to localStorage
+      localStorage.setItem("morphBoxTableData", JSON.stringify(defaultData.tableData))
+      localStorage.setItem("morphBoxScenarios", JSON.stringify(defaultData.scenarios))
+      localStorage.setItem("morphBoxTitle", defaultData.title)
+
+      setIsFirstLoad(false)
     } catch (error) {
       console.error("Error loading data:", error)
+      setIsFirstLoad(false)
     }
-  }, [])
+  }, [isFirstLoad, toast])
 
   // Update document title when title changes
   useEffect(() => {
-    if (typeof document !== "undefined") {
+    if (typeof document !== "undefined" && !isFirstLoad) {
       document.title = `${title} | morphbox`
     }
-  }, [title])
+  }, [title, isFirstLoad])
 
   // Save to history when data changes
   useEffect(() => {
-    if (tableData.length > 0 || scenarios.length > 0) {
+    if ((tableData.length > 0 || scenarios.length > 0) && !isFirstLoad) {
       // Save to localStorage
       localStorage.setItem("morphBoxTableData", JSON.stringify(tableData))
       localStorage.setItem("morphBoxScenarios", JSON.stringify(scenarios))
@@ -113,7 +131,7 @@ export default function Home() {
         setHistoryIndex(historyIndex + 1)
       }
     }
-  }, [tableData, scenarios, title])
+  }, [tableData, scenarios, title, isFirstLoad])
 
   const handleAddScenario = () => {
     setCurrentScenario(null)
@@ -278,8 +296,10 @@ export default function Home() {
   const handleClearAll = () => {
     setTableData([])
     setScenarios([])
+    setTitle("Empty Morphological Box") // Titel zurücksetzen
     localStorage.removeItem("morphBoxTableData")
     localStorage.removeItem("morphBoxScenarios")
+    localStorage.setItem("morphBoxTitle", "Empty Morphological Box") // Auch im localStorage aktualisieren
     toast({
       title: "All data cleared",
       description: "Your morphological box has been completely cleared.",
@@ -341,12 +361,24 @@ export default function Home() {
     }
   }
 
+  if (isFirstLoad) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold mb-2">Loading morphbox...</h2>
+          <p className="text-gray-600">Please wait while we prepare your morphological box.</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <>
       <main className="container mx-auto p-4 min-h-screen flex flex-col">
         <div className="flex flex-wrap items-center justify-between mb-6">
           <TitleInput title={title} onTitleChange={setTitle} />
           <div className="flex items-center space-x-2">
+            {/* Aktualisieren Sie die MoreMenu-Komponente mit den zusätzlichen Props */}
             <MoreMenu
               onSave={handleSaveToLocalStorage}
               onClear={() => setIsClearDialogOpen(true)}
@@ -354,6 +386,9 @@ export default function Home() {
               onHelp={() => setIsHelpModalOpen(true)}
               onImport={() => setIsImportModalOpen(true)}
               onExport={handleExportData}
+              tableData={tableData}
+              scenarios={scenarios}
+              title={title}
             />
           </div>
         </div>
@@ -376,7 +411,15 @@ export default function Home() {
             Undo
           </Button>
 
-          <ExportMenu tableData={tableData} scenarios={scenarios} title={title} />
+          <Button onClick={() => setIsShareDialogOpen(true)} variant="outline">
+            <Share2 className="h-4 w-4 mr-1" />
+            Share
+          </Button>
+
+          <Button onClick={() => setIsClearDialogOpen(true)} variant="outline" className="text-red-600 hover:bg-red-50">
+            <Trash2 className="h-4 w-4 mr-1" />
+            Clear Data
+          </Button>
         </div>
 
         <div className="flex-grow">
