@@ -24,7 +24,7 @@ export default function Home() {
   const { toast } = useToast()
   const [tableData, setTableData] = useState<TableData>(initialTableData)
   const [scenarios, setScenarios] = useState<Scenario[]>([])
-  const [title, setTitle] = useState("Morphological Box")
+  const [title, setTitle] = useState("Dummy Morphological Box: Fruits & Vegetables")
   const [isScenarioModalOpen, setIsScenarioModalOpen] = useState(false)
   const [isVariantModalOpen, setIsVariantModalOpen] = useState(false)
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false)
