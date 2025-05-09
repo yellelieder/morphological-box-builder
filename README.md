@@ -1,3 +1,4 @@
+
 # 🧠 Morphological Box Builder
 
 A flexible, interactive tool for scenario generation using morphological analysis. This application helps users explore complex problem spaces by breaking them down into variants and options, enabling structured creativity and systematic exploration.
@@ -5,58 +6,71 @@ A flexible, interactive tool for scenario generation using morphological analysi
 ## 🚀 Features
 
 - **Variants & Options Management**  
-  Create and manage multiple variants and their corresponding options to build a morphological field.
+  Define and manage variants (dimensions) and their corresponding options (values) to build a morphological field.
 
 - **Scenario Generation**  
-  Combine options into scenarios to simulate real-world cases — like default, edge, or average scenarios.
+  Combine one option per variant to create and analyze real-world scenarios.
 
-- **Visualization**  
-  Visual interface to navigate and edit variant-option relationships and scenario configurations.
+- **Statistics Dashboard**  
+  Get insights like total variants, options, possible combinations, and scenario coverage.
 
-- **Data Persistence**  
-  Auto-saves data in local storage, with support for import/export in JSON format.
-
-- **Export Capabilities**  
-  Download your morphological analysis as a PDF for documentation or presentation.
+- **Scenario Visualization**  
+  Visual lines show scenario structures across the morphological box.
 
 - **Undo & Redo**  
-  Easy mistake recovery with undo functionality.
+  Easily revert or reapply changes.
+
+- **Export & Share**  
+  Export your morphological box as a PDF or save/load work using JSON. Share links are also supported.
+
+- **Auto-Save**  
+  All changes are automatically stored in your browser.
 
 ## 📊 Example Use Case
 
-You're designing a complex B2B software licensing model. Using the Morphological Box Builder, you can:
+Imagine modeling the properties of fruits and vegetables:
 
-- Define variants like "License Type", "Billing Type", "Fulfillment Method", etc.
-- Add all possible options per variant.
-- Build and compare different licensing scenarios.
-- Export findings for stakeholders or implementation.
+- Define variants like "Color", "Size", "Shape", "Texture", etc.
+- Populate each with relevant options.
+- Create combinations like "Apple" or "Zucchini" and compare characteristics.
+- Export your model or share with others.
+
+## 📈 Current App Stats (Example)
+
+- **Variants**: 10  
+- **Total Options**: 40 (avg. 4.0 per variant)  
+- **Scenarios**: 3  
+- **Total Combinations**: 720,000  
+- **Scenario Coverage**: 0.000417%  
+- **Most Used Options**:  
+  - Category: Fruit (2)  
+  - Shape: Round (2)  
+  - Texture: Waxy (2)
+
+## 🍎 Example Variants & Options
+
+```
+Category:            Fruit, Vegetable
+Color:               Red, Green, Yellow, Orange, Purple
+Size:                Small, Medium, Large
+Shape:               Round, Oval, Elongated, Irregular
+Texture:             Smooth, Rough, Waxy, Hairy
+Taste:               Sweet, Sour, Bitter, Umami, Bland
+Consumption Type:    Raw, Cooked, Juiced, Dried
+Growth Environment:  Tree-grown, Bush-grown, Vine-grown, Root vegetable, Leaf vegetable
+Seasonality:         Year-round, Spring, Summer, Autumn, Winter
+Shelf Life:          Short (<1 week), Medium (1–2 weeks), Long (>2 weeks)
+```
 
 ## 📦 Installation
 
-This is a web-based tool — no installation required. However, if you want to run it locally:
+This is a web-based tool — no installation required. To run it locally:
 
 ```bash
 git clone https://github.com/YOUR_USERNAME/morphological-box-builder.git
 cd morphological-box-builder
 npm install
 npm run dev
-```
-
-## 📁 File Structure
-
-```
-.
-├── public/             # Static assets
-├── src/
-│   ├── components/     # UI components
-│   ├── data/           # Default configurations
-│   ├── hooks/          # Custom React hooks
-│   ├── lib/            # Utility functions
-│   └── pages/          # App pages and routing
-├── assets/             # Screenshots and media (optional)
-├── README.md
-├── package.json
-└── vite.config.js
 ```
 
 ## 🧩 Technology Stack
@@ -71,21 +85,10 @@ npm run dev
 Try the Morphological Box Builder now:  
 👉 [https://morphbox.yel.li](https://morphbox.yel.li)
 
-## 🛠️ Development Notes
-
-- Scenarios are calculated as the Cartesian product of all variant options.
-- The app currently supports:
-  - 15 variants
-  - 57 total options
-  - 47,923,200 theoretical combinations
-
 ## 📄 License
 
-This project is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
-
-You may copy, distribute, and modify the software as long as you disclose your source code and include the same license. This license is especially suited for SaaS and web-based applications, ensuring that improvements and derivatives remain open when deployed over a network.
-
-For more details, see the full license text: [GNU AGPL v3.0](https://www.gnu.org/licenses/agpl-3.0.html)
+This project is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).  
+See the full license: [GNU AGPL v3.0](https://www.gnu.org/licenses/agpl-3.0.html)
 
 ## ✨ Credits
 
